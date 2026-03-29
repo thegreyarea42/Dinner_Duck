@@ -32,7 +32,7 @@ To run this project, ensure you have the Flutter SDK installed on your machine.
 
 1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/thegreyarea42/DinnerDuck.git
+   git clone https://github.com/thegreyarea42/Dinner_Duck.git
    ```
 
 2. **Install Dependencies**:
