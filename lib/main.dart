@@ -384,6 +384,21 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     });
   }
 
+  void _updateGroceryItem(String oldItem, String newItem) {
+    setState(() {
+      int index = _groceryList.indexOf(oldItem);
+      if (index != -1) {
+        String cleaned = _cleanIngredientName(newItem);
+        if (cleaned.isNotEmpty) {
+          _groceryList[index] = cleaned;
+        } else {
+          _groceryList.removeAt(index);
+        }
+        _saveData();
+      }
+    });
+  }
+
   void _clearGroceryList() {
     setState(() {
       _groceryList.clear();
@@ -954,6 +969,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
           GroceryListScreen(
             groceryList: _groceryList,
             onRemove: _removeFromGroceryList,
+            onUpdate: _updateGroceryItem,
             onAddManual: (item) => _addToGroceryList([item]),
             onClearAll: _clearGroceryList,
             onAddStaples: _addStaplesToGroceries,
@@ -1428,7 +1444,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       labelText: 'Result',
                       border: borderStyle,
                       enabledBorder: borderStyle,
-                      fillColor: Theme.of(context).primaryColor.withValues(alpha: 0.05),
+                      fillColor: Theme.of(context).primaryColor.withOpacity(0.05),
                       filled: true,
                     ),
                   ),
@@ -1480,7 +1496,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               proxyDecorator: (child, index, animation) {
                 return Material(
                   elevation: 4,
-                  color: Colors.white.withValues(alpha: 0.8),
+                  color: Colors.white.withOpacity(0.8),
                   borderRadius: BorderRadius.circular(8),
                   child: child,
                 );
@@ -1870,6 +1886,7 @@ class _CookbookScreenState extends State<CookbookScreen> {
 class GroceryListScreen extends StatefulWidget {
   final List<String> groceryList;
   final Function(String) onRemove;
+  final Function(String, String) onUpdate;
   final Function(String) onAddManual;
   final VoidCallback onClearAll;
   final VoidCallback onAddStaples;
@@ -1884,6 +1901,7 @@ class GroceryListScreen extends StatefulWidget {
       {super.key,
         required this.groceryList,
         required this.onRemove,
+        required this.onUpdate,
         required this.onAddManual,
         required this.onClearAll,
         required this.onAddStaples,
@@ -1917,6 +1935,41 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
     if (pantry.any((k) => lowerItem.contains(k))) return 'Pantry';
 
     return 'Other';
+  }
+
+  void _shareList() {
+    if (widget.groceryList.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Your list is empty!')));
+      return;
+    }
+
+    String listText = "🛒 Dinner Duck Grocery List:\n\n";
+
+    if (widget.isCompactView) {
+      listText += widget.groceryList.map((i) => "• $i").join("\n");
+    } else {
+      Map<String, List<String>> categorized = {
+        'Produce': [],
+        'Dairy & Eggs': [],
+        'Meat & Seafood': [],
+        'Pantry': [],
+        'Other': [],
+      };
+
+      for (var item in widget.groceryList) {
+        categorized[_getCategory(item)]!.add(item);
+      }
+
+      for (var category in widget.categoryOrder) {
+        if (categorized[category] != null && categorized[category]!.isNotEmpty) {
+          listText += "[$category]\n";
+          listText += categorized[category]!.map((i) => "• $i").join("\n");
+          listText += "\n\n";
+        }
+      }
+    }
+
+    Share.share(listText.trim(), subject: 'Grocery List from Dinner Duck');
   }
 
   @override
@@ -1974,7 +2027,7 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFCC99).withValues(alpha: 0.4),
+                      color: const Color(0xFFFFCC99).withOpacity(0.4),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(category,
@@ -2056,17 +2109,31 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
                     Semantics(
                       label: 'Add standard pantry items to your list',
                       button: true,
-                      child: GestureDetector(
-                        onLongPress: widget.onLongPressAddStaples,
-                        child: TextButton.icon(
-                          onPressed: widget.onAddStaples,
-                          icon: const Icon(Icons.auto_awesome, size: 18),
-                          label: const Text('Add Staples', style: TextStyle(fontSize: 14)),
-                          style: TextButton.styleFrom(
-                            padding: EdgeInsets.zero,
-                            minimumSize: const Size(0, 48),
+                      child: Row(
+                        children: [
+                          GestureDetector(
+                            onLongPress: widget.onLongPressAddStaples,
+                            child: TextButton.icon(
+                              onPressed: widget.onAddStaples,
+                              icon: const Icon(Icons.auto_awesome, size: 18),
+                              label: const Text('Staples', style: TextStyle(fontSize: 14)),
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                minimumSize: const Size(0, 48),
+                              ),
+                            ),
                           ),
-                        ),
+                          const SizedBox(width: 8),
+                          TextButton.icon(
+                            onPressed: _shareList,
+                            icon: const Icon(Icons.share, size: 18),
+                            label: const Text('Share', style: TextStyle(fontSize: 14)),
+                            style: TextButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              minimumSize: const Size(0, 48),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -2113,6 +2180,39 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
     );
   }
 
+  void _showEditDialog(String item) {
+    final controller = TextEditingController(text: item);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Edit Item'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(border: OutlineInputBorder()),
+          onSubmitted: (val) {
+            if (val.trim().isNotEmpty) {
+              widget.onUpdate(item, val.trim());
+              Navigator.pop(ctx);
+            }
+          },
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () {
+              if (controller.text.trim().isNotEmpty) {
+                widget.onUpdate(item, controller.text.trim());
+                Navigator.pop(ctx);
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildItem(String item) {
     final bool isChecked = _checkedItems.contains(item);
     return Dismissible(
@@ -2131,27 +2231,30 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
         widget.onRemove(item);
       },
       child: Semantics(
-        label: 'Grocery item: $item. ${isChecked ? "Checked" : "Unchecked"}. Tap checkbox to toggle.',
-        child: CheckboxListTile(
-          title: Text(
-            item,
-            style: TextStyle(
-              fontSize: widget.fontSize,
-              decoration: isChecked ? TextDecoration.lineThrough : null,
-              color: isChecked ? Colors.grey : null,
+        label: 'Grocery item: $item. ${isChecked ? "Checked" : "Unchecked"}. Tap checkbox to toggle. Long press to edit.',
+        child: InkWell(
+          onLongPress: () => _showEditDialog(item),
+          child: CheckboxListTile(
+            title: Text(
+              item,
+              style: TextStyle(
+                fontSize: widget.fontSize,
+                decoration: isChecked ? TextDecoration.lineThrough : null,
+                color: isChecked ? Colors.grey : null,
+              ),
             ),
+            value: isChecked,
+            onChanged: (v) {
+              setState(() {
+                if (v == true) {
+                  _checkedItems.add(item);
+                } else {
+                  _checkedItems.remove(item);
+                }
+              });
+            },
+            controlAffinity: ListTileControlAffinity.leading,
           ),
-          value: isChecked,
-          onChanged: (v) {
-            setState(() {
-              if (v == true) {
-                _checkedItems.add(item);
-              } else {
-                _checkedItems.remove(item);
-              }
-            });
-          },
-          controlAffinity: ListTileControlAffinity.leading,
         ),
       ),
     );

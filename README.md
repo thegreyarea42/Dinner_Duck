@@ -14,6 +14,8 @@ Save and categorize your favorite recipes. Import recipes directly from websites
 - **Auto-Categorization**: Items are automatically sorted by aisle (Produce, Dairy, Meat, Pantry, etc.) to save you time in the store.
 - **Smart Suggestions**: See your most frequently purchased items for quick adding.
 - **Staples Management**: Define items you always need and add them all with a single tap.
+- **Quick Edits**: Long-press any item in your list to rename or update it instantly.
+- **Easy Sharing**: Tap the Share button to send your formatted, categorized shopping list to family or friends via SMS, email, or other apps.
 
 ### 🔊 Accessibility & Usability
 - **Voice Instructions**: Hands-busy? Use the built-in text-to-speech to read recipe steps aloud with adjustable speed.
@@ -49,6 +51,7 @@ Dinner Duck is built using:
 - **Flutter & Dart**: For a smooth, cross-platform experience.
 - **Shared Preferences**: For fast, local data persistence.
 - **Flutter TTS**: For accessible recipe guidance.
+- **Share Plus**: For seamless grocery list sharing.
 
 ## License
 
