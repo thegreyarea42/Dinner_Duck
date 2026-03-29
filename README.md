@@ -2,6 +2,15 @@
 
 Dinner Duck is a privacy-focused, shared grocery list and recipe manager built with Flutter. It's designed to simplify your kitchen routine without compromising your personal data.
 
+## Screenshots
+
+<p align="center">
+  <img src="assets/dd_planner_1.png" width="200" alt="Planner Screen 1">
+  <img src="assets/dd_planner_2.png" width="200" alt="Planner Screen 2">
+  <img src="assets/dd_planner_3.png" width="200" alt="Planner Screen 3">
+  <img src="assets/dd_grocery_list.png" width="200" alt="Grocery List Screen">
+</p>
+
 ## Features
 
 ### 📅 Meal Planner

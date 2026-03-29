@@ -1,5 +1,5 @@
 name: dinner_duck
-description: "A new Flutter project."
+description: "A privacy-focused, shared grocery list and recipe manager built with Flutter."
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -34,3 +34,4 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
+    - assets/
