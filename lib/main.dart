@@ -1,3 +1,9 @@
+/// Dinner Duck - A Flutter application for meal planning, recipe management, and grocery listing.
+///
+/// This file contains the main entry point and all the core UI components and logic
+/// for the Dinner Duck app, including meal scheduling, a personal cookbook,
+/// and an automated grocery list generator.
+library;
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -12,6 +18,10 @@ void main() {
   runApp(const DinnerDuckApp());
 }
 
+/// The root widget of the Dinner Duck application.
+/// 
+/// It initializes the [MaterialApp] with custom themes and handles
+/// the persistence of global settings like dark mode and font size.
 class DinnerDuckApp extends StatefulWidget {
   const DinnerDuckApp({super.key});
 
@@ -29,6 +39,7 @@ class _DinnerDuckAppState extends State<DinnerDuckApp> {
     _loadSettings();
   }
 
+  /// Loads the user's saved theme and font size preferences from [SharedPreferences].
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -37,6 +48,7 @@ class _DinnerDuckAppState extends State<DinnerDuckApp> {
     });
   }
 
+  /// Updates the application's global settings and triggers a rebuild.
   void _updateSettings(bool isDarkMode, double fontSize) {
     setState(() {
       _isDarkMode = isDarkMode;
@@ -76,6 +88,10 @@ class _DinnerDuckAppState extends State<DinnerDuckApp> {
   }
 }
 
+/// A data model representing a cooking recipe.
+/// 
+/// Contains all the necessary information to display, schedule, and
+/// generate shopping list items for a recipe.
 class Recipe {
   final String title;
   final List<String> ingredients;
@@ -95,6 +111,7 @@ class Recipe {
     this.isBookmarked = false,
   });
 
+  /// Converts the [Recipe] instance to a JSON-compatible map.
   Map<String, dynamic> toJson() => {
     'title': title,
     'ingredients': ingredients,
@@ -105,6 +122,7 @@ class Recipe {
     'isBookmarked': isBookmarked,
   };
 
+  /// Creates a [Recipe] instance from a JSON map.
   factory Recipe.fromJson(Map<String, dynamic> json) => Recipe(
     title: json['title'],
     ingredients: List<String>.from(json['ingredients']),
@@ -116,6 +134,10 @@ class Recipe {
   );
 }
 
+/// The main application screen containing the navigation and primary state.
+/// 
+/// It manages the lifecycle of the meal plan, cookbook, and grocery list
+/// and coordinates between the different feature screens.
 class MainScreen extends StatefulWidget {
   final double initialFontSize;
   final bool initialIsDarkMode;
@@ -187,6 +209,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     }
   }
 
+  /// Loads all application data (meal plans, cookbook, etc.) from local storage.
   Future<void> _loadData() async {
     final prefs = await SharedPreferences.getInstance();
     final plannerJson = prefs.getString('mealPlans');
@@ -225,6 +248,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     _updateWakelock();
   }
 
+  /// Persists all current application data to local storage.
   Future<void> _saveData() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('mealPlans', jsonEncode(_mealPlans.map((x) => x.toJson()).toList()));
@@ -235,6 +259,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     await prefs.setString('purchaseHistory', jsonEncode(_purchaseHistory));
   }
 
+  /// Saves user settings and notifies the parent widget of changes.
   Future<void> _saveSettings() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble('fontSize', _fontSize);
@@ -247,11 +272,13 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     _updateWakelock();
   }
 
+  /// Toggles the device's wakelock based on current screen and settings.
   void _updateWakelock() {
     bool shouldBeOn = _keepScreenOn && (_selectedIndex == 0 || _selectedIndex == 1);
     WakelockPlus.toggle(enable: shouldBeOn);
   }
 
+  /// Cleans ingredient names by removing quantities and units.
   String _cleanIngredientName(String input) {
     String cleaned = input.toLowerCase();
     cleaned = cleaned.replaceAll(RegExp(r'\d+\s*x\s*\d+[a-z]*|\d+[a-z]+'), '');
@@ -447,6 +474,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     return entries.take(5).map((e) => e.key).toList();
   }
 
+  /// Displays a dialog to review and add recipe ingredients to the shopping list.
   void _showAddToCartDialog(Recipe recipe) {
     final controller = TextEditingController(text: recipe.ingredients.join('\n'));
     showDialog(
@@ -485,6 +513,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     );
   }
 
+  /// Displays a dialog for creating or editing a recipe, including web scraping functionality.
   void _showRecipeDialog({Recipe? existingRecipe, int? index, bool isSchedulingFromCookbook = false}) {
     final titleController = TextEditingController(text: existingRecipe?.title ?? '');
     final ingredientsController = TextEditingController(text: existingRecipe?.ingredients.join('\n') ?? '');
@@ -523,7 +552,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
               try {
                 final response = await http.get(Uri.parse(urlText), headers: {
                   'User-Agent':
-                      'Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1',
+                  'Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1',
                 }).timeout(const Duration(seconds: 15));
 
                 if (response.statusCode == 200) {
@@ -545,7 +574,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                             scrapedTitle ??= data['name']?.toString();
                             if (data['recipeIngredient'] is List) {
                               scrapedIngredients = List<String>.from(
-                                      data['recipeIngredient'].map((e) => cleanText(e.toString())))
+                                  data['recipeIngredient'].map((e) => cleanText(e.toString())))
                                   .where((e) => e.isNotEmpty)
                                   .toList();
                             }
@@ -701,13 +730,13 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                           border: const OutlineInputBorder(),
                           suffixIcon: isLoading
                               ? const Padding(
-                                  padding: EdgeInsets.all(12), child: CircularProgressIndicator(strokeWidth: 2))
+                              padding: EdgeInsets.all(12), child: CircularProgressIndicator(strokeWidth: 2))
                               : IconButton(
-                                  icon: const Icon(Icons.auto_fix_high),
-                                  onPressed: scrapeRecipe,
-                                  tooltip: 'Scrape recipe',
-                                  constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-                                ),
+                            icon: const Icon(Icons.auto_fix_high),
+                            onPressed: scrapeRecipe,
+                            tooltip: 'Scrape recipe',
+                            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                          ),
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -719,14 +748,14 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                       TextField(
                         controller: ingredientsController,
                         decoration:
-                            const InputDecoration(labelText: 'Ingredients (one per line)', border: OutlineInputBorder()),
+                        const InputDecoration(labelText: 'Ingredients (one per line)', border: OutlineInputBorder()),
                         maxLines: 4,
                       ),
                       const SizedBox(height: 12),
                       TextField(
                         controller: instructionsController,
                         decoration:
-                            const InputDecoration(labelText: 'Instructions (one per line)', border: OutlineInputBorder()),
+                        const InputDecoration(labelText: 'Instructions (one per line)', border: OutlineInputBorder()),
                         maxLines: 4,
                       ),
                       const SizedBox(height: 12),
@@ -767,9 +796,9 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                             final newRecipe = Recipe(
                               title: titleController.text,
                               ingredients:
-                                  ingredientsController.text.split('\n').where((s) => s.trim().isNotEmpty).toList(),
+                              ingredientsController.text.split('\n').where((s) => s.trim().isNotEmpty).toList(),
                               instructions:
-                                  instructionsController.text.split('\n').where((s) => s.trim().isNotEmpty).toList(),
+                              instructionsController.text.split('\n').where((s) => s.trim().isNotEmpty).toList(),
                               mealType: selectedMealType,
                               date: selectedDate,
                               link: linkController.text,
@@ -863,6 +892,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     );
   }
 
+  /// Triggers text-to-speech for the given text.
   void _speak(String text) async {
     if (_currentlySpeakingText == text) {
       await _flutterTts.stop();
@@ -963,6 +993,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   }
 }
 
+/// A button that toggles a bookmark state with a scale animation.
 class AnimatedBookmarkButton extends StatefulWidget {
   final bool isBookmarked;
   final VoidCallback onTap;
@@ -1018,6 +1049,10 @@ class _AnimatedBookmarkButtonState extends State<AnimatedBookmarkButton> with Si
   }
 }
 
+/// The settings screen where users can customize the application.
+///
+/// Provides controls for accessibility, theme, kitchen tools (converters),
+/// and data management (export/import).
 class SettingsScreen extends StatefulWidget {
   final double fontSize;
   final bool isDarkMode;
@@ -1105,6 +1140,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     widget.onSettingsChanged(_fontSize, _isDarkMode, _keepScreenOn, _isCompactView, _showFrequentlyBought, _speechRate);
   }
 
+  /// Displays a dialog for managing standard pantry staple items.
   void _showManageStaples() {
     final controller = TextEditingController();
     showDialog(
@@ -1163,7 +1199,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context), 
+              onPressed: () => Navigator.pop(context),
               style: TextButton.styleFrom(minimumSize: const Size(64, 48)),
               child: const Text('Close'),
             ),
@@ -1189,7 +1225,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context), 
+            onPressed: () => Navigator.pop(context),
             style: TextButton.styleFrom(minimumSize: const Size(64, 48)),
             child: const Text('Cancel'),
           ),
@@ -1206,6 +1242,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  /// Calculates cooking measurement conversions based on selected type and input.
   void _performConversion() {
     if (_inputController.text.isEmpty) {
       _resultController.text = '';
@@ -1524,6 +1561,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 }
 
+/// A screen that displays the user's scheduled meals in a calendar-like list.
+///
+/// Allows users to view recipe details, edit meals, scale portions,
+/// and add ingredients to the shopping list.
 class ScheduleScreen extends StatefulWidget {
   final List<Recipe> mealPlans;
   final Function(Recipe) onBookmarkToggled;
@@ -1536,14 +1577,14 @@ class ScheduleScreen extends StatefulWidget {
 
   const ScheduleScreen(
       {super.key,
-      required this.mealPlans,
-      required this.onBookmarkToggled,
-      required this.onEdit,
-      required this.onAddToCart,
-      required this.onDelete,
-      required this.fontSize,
-      required this.onSpeak,
-      this.currentlySpeakingText});
+        required this.mealPlans,
+        required this.onBookmarkToggled,
+        required this.onEdit,
+        required this.onAddToCart,
+        required this.onDelete,
+        required this.fontSize,
+        required this.onSpeak,
+        this.currentlySpeakingText});
 
   @override
   State<ScheduleScreen> createState() => _ScheduleScreenState();
@@ -1552,6 +1593,7 @@ class ScheduleScreen extends StatefulWidget {
 class _ScheduleScreenState extends State<ScheduleScreen> {
   int _servingSize = 4;
 
+  /// Scales ingredient quantities based on the selected serving size.
   List<String> _scaleIngredients(List<String> ingredients, int size) {
     return ingredients.map((i) {
       return i.replaceAllMapped(RegExp(r'(\d+(\.\d+)?)'), (match) {
@@ -1647,22 +1689,22 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                     Text("Instructions", style: TextStyle(fontWeight: FontWeight.bold, fontSize: widget.fontSize)),
                     const SizedBox(height: 4),
                     ...plan.instructions.asMap().entries.map((e) => MergeSemantics(
-                          child: Row(
-                            children: [
-                              Expanded(child: Text("${e.key + 1}. ${e.value}", style: TextStyle(fontSize: widget.fontSize, height: 1.5))),
-                              IconButton(
-                                icon: Icon(
-                                    widget.currentlySpeakingText == e.value
-                                        ? Icons.stop_circle_outlined
-                                        : Icons.play_circle_outline,
-                                    color: const Color(0xFF064E40)),
-                                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-                                onPressed: () => widget.onSpeak(e.value),
-                                tooltip: widget.currentlySpeakingText == e.value ? 'Stop reading' : 'Read instruction aloud',
-                              ),
-                            ],
+                      child: Row(
+                        children: [
+                          Expanded(child: Text("${e.key + 1}. ${e.value}", style: TextStyle(fontSize: widget.fontSize, height: 1.5))),
+                          IconButton(
+                            icon: Icon(
+                                widget.currentlySpeakingText == e.value
+                                    ? Icons.stop_circle_outlined
+                                    : Icons.play_circle_outline,
+                                color: const Color(0xFF064E40)),
+                            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                            onPressed: () => widget.onSpeak(e.value),
+                            tooltip: widget.currentlySpeakingText == e.value ? 'Stop reading' : 'Read instruction aloud',
                           ),
-                        )),
+                        ],
+                      ),
+                    )),
                   ],
                 ),
               ),
@@ -1691,6 +1733,10 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   }
 }
 
+/// A screen for managing saved recipes in the user's cookbook.
+///
+/// Allows users to view bookmarked recipes, schedule them for future meals,
+/// and scale ingredients for shopping.
 class CookbookScreen extends StatefulWidget {
   final List<Recipe> cookbook;
   final Function(String) onRemove;
@@ -1702,13 +1748,13 @@ class CookbookScreen extends StatefulWidget {
 
   const CookbookScreen(
       {super.key,
-      required this.cookbook,
-      required this.onRemove,
-      required this.onSchedule,
-      required this.onAddToCart,
-      required this.fontSize,
-      required this.onSpeak,
-      this.currentlySpeakingText});
+        required this.cookbook,
+        required this.onRemove,
+        required this.onSchedule,
+        required this.onAddToCart,
+        required this.fontSize,
+        required this.onSpeak,
+        this.currentlySpeakingText});
 
   @override
   State<CookbookScreen> createState() => _CookbookScreenState();
@@ -1717,6 +1763,7 @@ class CookbookScreen extends StatefulWidget {
 class _CookbookScreenState extends State<CookbookScreen> {
   int _servingSize = 4;
 
+  /// Scales ingredient quantities based on the selected serving size.
   List<String> _scaleIngredients(List<String> ingredients, int size) {
     return ingredients.map((i) {
       return i.replaceAllMapped(RegExp(r'(\d+(\.\d+)?)'), (match) {
@@ -1789,22 +1836,22 @@ class _CookbookScreenState extends State<CookbookScreen> {
                     Text("Instructions", style: TextStyle(fontWeight: FontWeight.bold, fontSize: widget.fontSize)),
                     const SizedBox(height: 4),
                     ...recipe.instructions.asMap().entries.map((e) => MergeSemantics(
-                          child: Row(
-                            children: [
-                              Expanded(child: Text("${e.key + 1}. ${e.value}", style: TextStyle(fontSize: widget.fontSize, height: 1.5))),
-                              IconButton(
-                                icon: Icon(
-                                    widget.currentlySpeakingText == e.value
-                                        ? Icons.stop_circle_outlined
-                                        : Icons.play_circle_outline,
-                                    color: const Color(0xFF064E40)),
-                                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-                                onPressed: () => widget.onSpeak(e.value),
-                                tooltip: widget.currentlySpeakingText == e.value ? 'Stop reading' : 'Read instruction aloud',
-                              ),
-                            ],
+                      child: Row(
+                        children: [
+                          Expanded(child: Text("${e.key + 1}. ${e.value}", style: TextStyle(fontSize: widget.fontSize, height: 1.5))),
+                          IconButton(
+                            icon: Icon(
+                                widget.currentlySpeakingText == e.value
+                                    ? Icons.stop_circle_outlined
+                                    : Icons.play_circle_outline,
+                                color: const Color(0xFF064E40)),
+                            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                            onPressed: () => widget.onSpeak(e.value),
+                            tooltip: widget.currentlySpeakingText == e.value ? 'Stop reading' : 'Read instruction aloud',
                           ),
-                        )),
+                        ],
+                      ),
+                    )),
                   ],
                 ),
               ),
@@ -1816,6 +1863,10 @@ class _CookbookScreenState extends State<CookbookScreen> {
   }
 }
 
+/// A screen that manages the user's shopping list with automatic categorization.
+///
+/// Supports manual entry, standard staples, and frequent purchase suggestions.
+/// Categorizes items into aisles like Produce, Dairy, and Meat for efficient shopping.
 class GroceryListScreen extends StatefulWidget {
   final List<String> groceryList;
   final Function(String) onRemove;
@@ -1831,17 +1882,17 @@ class GroceryListScreen extends StatefulWidget {
 
   const GroceryListScreen(
       {super.key,
-      required this.groceryList,
-      required this.onRemove,
-      required this.onAddManual,
-      required this.onClearAll,
-      required this.onAddStaples,
-      required this.onLongPressAddStaples,
-      required this.isCompactView,
-      required this.showFrequentlyBought,
-      required this.frequentSuggestions,
-      required this.fontSize,
-      required this.categoryOrder});
+        required this.groceryList,
+        required this.onRemove,
+        required this.onAddManual,
+        required this.onClearAll,
+        required this.onAddStaples,
+        required this.onLongPressAddStaples,
+        required this.isCompactView,
+        required this.showFrequentlyBought,
+        required this.frequentSuggestions,
+        required this.fontSize,
+        required this.categoryOrder});
 
   @override
   State<GroceryListScreen> createState() => _GroceryListScreenState();
@@ -1851,6 +1902,7 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
   final TextEditingController _manualController = TextEditingController();
   final Set<String> _checkedItems = {};
 
+  /// Determines the category of a grocery item based on its name.
   String _getCategory(String item) {
     final lowerItem = item.toLowerCase();
 
@@ -1877,13 +1929,13 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
             child: widget.groceryList.isEmpty
                 ? const Center(child: Text('Your list is empty', style: TextStyle(fontSize: 18, color: Colors.grey)))
                 : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    itemCount: widget.groceryList.length,
-                    itemBuilder: (context, index) {
-                      final item = widget.groceryList[index];
-                      return _buildItem(item);
-                    },
-                  ),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              itemCount: widget.groceryList.length,
+              itemBuilder: (context, index) {
+                final item = widget.groceryList[index];
+                return _buildItem(item);
+              },
+            ),
           ),
         ],
       );
@@ -1910,31 +1962,31 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
           child: widget.groceryList.isEmpty
               ? const Center(child: Text('Your list is empty', style: TextStyle(fontSize: 18, color: Colors.grey)))
               : ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  itemCount: categories.length,
-                  itemBuilder: (context, catIdx) {
-                    final category = categories[catIdx];
-                    final items = categorized[category]!;
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFCC99).withValues(alpha: 0.4),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(category,
-                              style: const TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF064E40))),
-                        ),
-                        ...items.map((item) => _buildItem(item)),
-                        const SizedBox(height: 16),
-                      ],
-                    );
-                  },
-                ),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            itemCount: categories.length,
+            itemBuilder: (context, catIdx) {
+              final category = categories[catIdx];
+              final items = categorized[category]!;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFCC99).withValues(alpha: 0.4),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(category,
+                        style: const TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF064E40))),
+                  ),
+                  ...items.map((item) => _buildItem(item)),
+                  const SizedBox(height: 16),
+                ],
+              );
+            },
+          ),
         ),
       ],
     );
@@ -2011,7 +2063,7 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
                           icon: const Icon(Icons.auto_awesome, size: 18),
                           label: const Text('Add Staples', style: TextStyle(fontSize: 14)),
                           style: TextButton.styleFrom(
-                            padding: EdgeInsets.zero, 
+                            padding: EdgeInsets.zero,
                             minimumSize: const Size(0, 48),
                           ),
                         ),
@@ -2032,7 +2084,7 @@ class _GroceryListScreenState extends State<GroceryListScreen> {
                           title: const Text('Clear List?'),
                           actions: [
                             TextButton(
-                              onPressed: () => Navigator.pop(ctx), 
+                              onPressed: () => Navigator.pop(ctx),
                               style: TextButton.styleFrom(minimumSize: const Size(64, 48)),
                               child: const Text('No'),
                             ),
