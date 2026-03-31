@@ -1,0 +1,5 @@
+Analyzing Dinner_Duck-2...                                      
+
+warning - Unused import: 'package:flutter/material.dart' - test\widget_test.dart:1:8 - unused_import
+
+1 issue found. (ran in 2.3s)

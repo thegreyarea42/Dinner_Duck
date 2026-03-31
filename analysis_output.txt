@@ -1,0 +1,29 @@
+Resolving dependencies...
+Downloading packages...
+  async 2.13.0 (2.13.1 available)
+  flutter_launcher_icons 0.13.1 (0.14.4 available)
+  meta 1.17.0 (1.18.2 available)
+  package_info_plus 9.0.0 (9.0.1 available)
+  share_plus 10.1.4 (12.0.2 available)
+  share_plus_platform_interface 5.0.2 (6.1.0 available)
+  test_api 0.7.10 (0.7.11 available)
+  vector_math 2.2.0 (2.3.0 available)
+  win32 5.15.0 (6.0.0 available)
+Got dependencies!
+9 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+Analyzing Dinner_Duck-2...                                      
+
+warning - Unused import: 'package:url_launcher/url_launcher.dart' - lib\main.dart:12:8 - unused_import
+warning - Unused import: 'package:dinner_duck/widgets/animated_bookmark_button.dart' - lib\main.dart:17:8 - unused_import
+  error - The named parameter 'isCompactView' isn't defined - lib\main.dart:939:13 - undefined_named_parameter
+   info - Unnecessary use of string interpolation - lib\screens\cookbook_screen.dart:68:28 - unnecessary_string_interpolations
+   info - Use interpolation to compose strings and values - lib\screens\grocery_list_screen.dart:46:23 - prefer_interpolation_to_compose_strings
+   info - Statements in an if should be enclosed in a block - lib\screens\grocery_list_screen.dart:65:41 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\screens\grocery_list_screen.dart:66:44 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\screens\grocery_list_screen.dart:67:43 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\screens\grocery_list_screen.dart:68:45 - curly_braces_in_flow_control_structures
+warning - Unused import: 'dart:convert' - lib\screens\settings_screen.dart:1:8 - unused_import
+warning - Unused import: 'package:url_launcher/url_launcher.dart' - lib\screens\settings_screen.dart:4:8 - unused_import
+warning - Unused import: 'package:share_plus/share_plus.dart' - lib\screens\settings_screen.dart:5:8 - unused_import
+
