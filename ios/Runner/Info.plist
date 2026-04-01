@@ -66,5 +66,11 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Dinner Duck needs local network access to sync your shredded recipes with nearby ducks.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_dinnerduck._tcp</string>
+	</array>
 </dict>
 </plist>

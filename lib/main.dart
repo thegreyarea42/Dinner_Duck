@@ -4,6 +4,7 @@
 /// for the Dinner Duck app, including meal scheduling, a personal cookbook,
 /// and an automated grocery list generator.
 library;
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
@@ -16,6 +17,8 @@ import 'package:dinner_duck/screens/cookbook_screen.dart';
 import 'package:dinner_duck/screens/grocery_list_screen.dart';
 import 'package:dinner_duck/services/persistence_service.dart';
 import 'package:dinner_duck/services/recipe_service.dart';
+import 'package:dinner_duck/screens/quack_center_screen.dart';
+import 'package:dinner_duck/services/quack_service.dart';
 
 void main() {
   runApp(const DinnerDuckApp());
@@ -119,6 +122,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   List<String> _staples = [];
   List<String> _categoryOrder = ['Produce', 'Dairy & Eggs', 'Meat & Seafood', 'Pantry', 'Other'];
   Map<String, int> _purchaseHistory = {};
+  List<String> _checkedItems = [];
   int _selectedIndex = 0;
 
   // Settings
@@ -128,11 +132,16 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   bool _isCompactView = false;
   bool _showFrequentlyBought = true;
   double _speechRate = 0.5;
+  String _quackCode = '0000';
   String? _currentlySpeakingText;
   late PageController _pageController;
+  Timer? _heartbeatTimer;
+  int _lastModifiedTimestamp = 0;
+  int _lastSyncedTimestamp = 0;
 
   final FlutterTts _flutterTts = FlutterTts();
   final PersistenceService _persistenceService = PersistenceService();
+  final QuackService _quackService = QuackService();
 
   @override
   void initState() {
@@ -144,6 +153,17 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     // Start at a high multiple of 3 for infinite swiping
     _pageController = PageController(initialPage: 3000);
     _loadData();
+    
+    // Listen for Quack Service status changes
+    _quackService.statusStream.listen((status) {
+      if (mounted) setState(() {});
+    });
+
+    _quackService.timerStream.listen((remainingSeconds) {
+       if (mounted) setState(() {});
+    });
+
+    _startHeartbeat();
 
     _flutterTts.setCompletionHandler(() {
       setState(() => _currentlySpeakingText = null);
@@ -156,9 +176,20 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     });
   }
 
+  void _startHeartbeat() {
+    _heartbeatTimer?.cancel();
+    _heartbeatTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      if (_quackService.isLiveExcellent && _lastModifiedTimestamp > _lastSyncedTimestamp) {
+        debugPrint('Heartbeat: Pushing bread...');
+        _pushBread();
+      }
+    });
+  }
+
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _heartbeatTimer?.cancel();
     WakelockPlus.disable();
     _flutterTts.stop();
     _pageController.dispose();
@@ -169,8 +200,15 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused) {
       WakelockPlus.disable();
+      _quackService.stopQuacking();
     } else if (state == AppLifecycleState.resumed) {
       _updateWakelock();
+      _quackService.startQuacking(
+        quackCode: _quackCode,
+        onDataReceived: _syncData,
+        onSyncExcellent: () {},
+        onDeviceFound: (host, port, name) {},
+      );
     }
   }
 
@@ -188,25 +226,32 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       _staples = data['staples'];
       _categoryOrder = data['categoryOrder'];
       _purchaseHistory = data['purchaseHistory'];
+      _checkedItems = data['checkedItems'] ?? [];
       
       _keepScreenOn = data['keepScreenOn'];
-      _isCompactView = data['isCompactView'];
-      _showFrequentlyBought = data['showFrequentlyBought'];
-      _speechRate = data['speechRate'];
+      _quackCode = data['quackCode'] ?? '0000';
     });
     _updateWakelock();
   }
 
   /// Persists all current application data to local storage.
   Future<void> _saveData() async {
-    await _persistenceService.saveData(
-      mealPlans: _mealPlans,
-      cookbook: _cookbook,
-      groceryList: _groceryList,
-      staples: _staples,
-      categoryOrder: _categoryOrder,
-      purchaseHistory: _purchaseHistory,
-    );
+    _lastModifiedTimestamp = DateTime.now().millisecondsSinceEpoch;
+    await _saveDataInternal();
+  }
+
+  void _pushBread() {
+    if (!_quackService.isLiveExcellent) return;
+    _lastSyncedTimestamp = _lastModifiedTimestamp;
+    _quackService.pushBread({
+      'mealPlans': _mealPlans,
+      'cookbook': _cookbook,
+      'groceryList': _groceryList,
+      'staples': _staples,
+      'categoryOrder': _categoryOrder,
+      'purchaseHistory': _purchaseHistory,
+      'checkedItems': _checkedItems,
+    });
   }
 
   /// Saves user settings and notifies the parent widget of changes.
@@ -453,6 +498,67 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       _saveData();
     });
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Staples added to list!')));
+  }
+
+  void _syncData(Map<String, dynamic> data) {
+    setState(() {
+      // 1. Merge Cookbook (unique by title)
+      final remoteCookbook = List<Recipe>.from((data['cookbook'] as List).map((x) => Recipe.fromJson(x)));
+      final Map<String, Recipe> cookbookMap = { for (var r in _cookbook) r.title: r };
+      for (var r in remoteCookbook) {
+        if (!cookbookMap.containsKey(r.title)) cookbookMap[r.title] = r;
+      }
+      _cookbook = cookbookMap.values.toList();
+
+      // 2. Merge Planner (unique by composite: title_date_mealType)
+      final remoteMealPlans = List<Recipe>.from((data['mealPlans'] as List).map((x) => Recipe.fromJson(x)));
+      final Map<String, Recipe> mealPlanMap = {
+        for (var r in _mealPlans) '${r.title}_${r.date.toIso8601String()}_${r.mealType}': r
+      };
+      for (var r in remoteMealPlans) {
+        final key = '${r.title}_${r.date.toIso8601String()}_${r.mealType}';
+        if (!mealPlanMap.containsKey(key)) mealPlanMap[key] = r;
+      }
+      _mealPlans = mealPlanMap.values.toList();
+      _mealPlans.sort((a, b) => a.date.compareTo(b.date)); // Keep schedule sorted chronologically
+
+      // 3. Merge Grocery Lists & Checked Items
+      final remoteGrocery = List<String>.from(data['groceryList'] ?? []);
+      _groceryList = (_groceryList.toSet()..addAll(remoteGrocery)).toList();
+
+      final remoteChecked = List<String>.from(data['checkedItems'] ?? []);
+      _checkedItems = (_checkedItems.toSet()..addAll(remoteChecked)).toList();
+
+      // 4. Merge Staples & Category Order
+      final remoteStaples = List<String>.from(data['staples'] ?? []);
+      _staples = (_staples.toSet()..addAll(remoteStaples)).toList();
+
+      final remoteCategoryOrder = List<String>.from(data['categoryOrder'] ?? []);
+      _categoryOrder = (_categoryOrder.toSet()..addAll(remoteCategoryOrder)).toList();
+
+      // 5. Merge Purchase History (keep the highest purchase count)
+      final remotePurchaseHistory = Map<String, int>.from(data['purchaseHistory'] ?? {});
+      for (var entry in remotePurchaseHistory.entries) {
+        int current = _purchaseHistory[entry.key] ?? 0;
+        _purchaseHistory[entry.key] = current > entry.value ? current : entry.value;
+      }
+      
+      // Save without pushing back to avoid bread loops
+      _saveDataInternal();
+      _lastSyncedTimestamp = _lastModifiedTimestamp; // Avoid immediate re-push
+    });
+  }
+
+  Future<void> _saveDataInternal() async {
+    await _persistenceService.saveData(
+      mealPlans: _mealPlans,
+      cookbook: _cookbook,
+      groceryList: _groceryList,
+      staples: _staples,
+      categoryOrder: _categoryOrder,
+      purchaseHistory: _purchaseHistory,
+      checkedItems: _checkedItems,
+    );
   }
 
   void _showSettingsAndManageStaples() {
@@ -821,12 +927,40 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
           ],
         ),
         centerTitle: true,
-        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
-        elevation: 0,
         actions: [
+          if (_quackService.isLiveExcellent)
+            _PulsingDuckIcon(timerStream: _quackService.timerStream),
+          IconButton(
+            icon: const Icon(Icons.sync),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => QuackCenterScreen(
+                    quackCode: _quackCode,
+                    onQuackCodeChanged: (newCode) {
+                      setState(() => _quackCode = newCode);
+                      _persistenceService.saveSettings(
+                        fontSize: _fontSize,
+                        isDarkMode: _isDarkMode,
+                        keepScreenOn: _keepScreenOn,
+                        isCompactView: _isCompactView,
+                        showFrequentlyBought: _showFrequentlyBought,
+                        speechRate: _speechRate,
+                        quackCode: newCode,
+                      );
+                    },
+                    onDataReceived: _syncData,
+                  ),
+                ),
+              );
+            },
+            tooltip: 'Sync (Quack)',
+            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+          ),
           IconButton(
             icon: const Icon(Icons.settings),
-            onPressed: _showSettings,
+            onPressed: () => _showSettings(),
             tooltip: 'Settings',
             constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
           ),
@@ -867,12 +1001,23 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
             case 2:
               return GroceryListScreen(
                 groceryList: _groceryList,
+                checkedItems: _checkedItems,
                 onRemove: _removeFromGroceryList,
                 onUpdate: _updateGroceryItem,
                 onAddManual: (item) => _addToGroceryList([item]),
                 onClearAll: _clearGroceryList,
                 onAddStaples: _addStaplesToGroceries,
                 onLongPressAddStaples: _showSettingsAndManageStaples,
+                onCheckToggled: (item, isChecked) {
+                  setState(() {
+                    if (isChecked) {
+                      _checkedItems.add(item);
+                    } else {
+                      _checkedItems.remove(item);
+                    }
+                    _saveData();
+                  });
+                },
                 isCompactView: _isCompactView,
                 showFrequentlyBought: _showFrequentlyBought,
                 frequentSuggestions: _topFrequentSuggestions,
@@ -924,6 +1069,62 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
           NavigationDestination(icon: Icon(Icons.shopping_cart), label: 'Groceries'),
         ],
       ),
+    );
+  }
+}
+
+class _PulsingDuckIcon extends StatefulWidget {
+  final Stream<int> timerStream;
+  const _PulsingDuckIcon({required this.timerStream});
+
+  @override
+  State<_PulsingDuckIcon> createState() => _PulsingDuckIconState();
+}
+
+class _PulsingDuckIconState extends State<_PulsingDuckIcon> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<int>(
+      stream: widget.timerStream,
+      builder: (context, snapshot) {
+        final totalSeconds = snapshot.data ?? 0;
+        final minutes = totalSeconds ~/ 60;
+        final seconds = totalSeconds % 60;
+        final timerText = "$minutes:${seconds.toString().padLeft(2, '0')}";
+
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ScaleTransition(
+              scale: Tween(begin: 0.8, end: 1.2).animate(_controller),
+              child: const Icon(Icons.flutter_dash, color: Colors.orange, size: 24),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              timerText,
+              style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold, fontSize: 14),
+            ),
+            const SizedBox(width: 8),
+          ],
+        );
+      },
     );
   }
 }

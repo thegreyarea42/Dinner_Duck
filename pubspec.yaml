@@ -19,6 +19,17 @@ dependencies:
   flutter_tts: ^4.2.2
   firebase_core: ^4.6.0
   cloud_firestore: ^6.2.0
+  multicast_dns: ^0.3.3
+  shelf: ^1.4.2
+  shelf_router: ^1.1.4
+  network_info_plus: ^7.0.0
+  fluttertoast: ^9.0.0
+  nsd: ^4.1.0
+  bonsoir: ^6.0.2
+  qr_flutter: ^4.1.0
+  mobile_scanner: ^7.2.0
+  nfc_manager: ^4.1.1
+  ndef_record: ^1.4.2
 
 dev_dependencies:
   flutter_test:

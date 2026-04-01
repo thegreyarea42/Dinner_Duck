@@ -9,12 +9,14 @@ class PersistenceService {
   static const String _staplesKey = 'staples';
   static const String _categoryOrderKey = 'categoryOrder';
   static const String _purchaseHistoryKey = 'purchaseHistory';
+  static const String _checkedItemsKey = 'checkedItems';
   static const String _fontSizeKey = 'fontSize';
   static const String _isDarkModeKey = 'isDarkMode';
   static const String _keepScreenOnKey = 'keepScreenOn';
   static const String _isCompactViewKey = 'isCompactView';
   static const String _showFrequentlyBoughtKey = 'showFrequentlyBought';
   static const String _speechRateKey = 'speechRate';
+  static const String _quackCodeKey = 'quackCode';
 
   Future<Map<String, dynamic>> loadAllData() async {
     final prefs = await SharedPreferences.getInstance();
@@ -25,6 +27,7 @@ class PersistenceService {
     final staplesJson = prefs.getString(_staplesKey);
     final orderJson = prefs.getString(_categoryOrderKey);
     final historyJson = prefs.getString(_purchaseHistoryKey);
+    final checkedJson = prefs.getString(_checkedItemsKey);
 
     List<Recipe> mealPlans = [];
     if (plannerJson != null) {
@@ -56,6 +59,11 @@ class PersistenceService {
       purchaseHistory = Map<String, int>.from(jsonDecode(historyJson));
     }
 
+    List<String> checkedItems = [];
+    if (checkedJson != null) {
+      checkedItems = List<String>.from(jsonDecode(checkedJson));
+    }
+
     return {
       'mealPlans': mealPlans,
       'cookbook': cookbook,
@@ -63,12 +71,14 @@ class PersistenceService {
       'staples': staples,
       'categoryOrder': categoryOrder,
       'purchaseHistory': purchaseHistory,
+      'checkedItems': checkedItems,
       'fontSize': prefs.getDouble(_fontSizeKey) ?? 18.0,
       'isDarkMode': prefs.getBool(_isDarkModeKey) ?? false,
       'keepScreenOn': prefs.getBool(_keepScreenOnKey) ?? false,
       'isCompactView': prefs.getBool(_isCompactViewKey) ?? false,
       'showFrequentlyBought': prefs.getBool(_showFrequentlyBoughtKey) ?? true,
       'speechRate': prefs.getDouble(_speechRateKey) ?? 0.5,
+      'quackCode': prefs.getString(_quackCodeKey) ?? '0000',
     };
   }
 
@@ -79,6 +89,7 @@ class PersistenceService {
     required List<String> staples,
     required List<String> categoryOrder,
     required Map<String, int> purchaseHistory,
+    required List<String> checkedItems,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_mealPlansKey, jsonEncode(mealPlans.map((x) => x.toJson()).toList()));
@@ -87,6 +98,7 @@ class PersistenceService {
     await prefs.setString(_staplesKey, jsonEncode(staples));
     await prefs.setString(_categoryOrderKey, jsonEncode(categoryOrder));
     await prefs.setString(_purchaseHistoryKey, jsonEncode(purchaseHistory));
+    await prefs.setString(_checkedItemsKey, jsonEncode(checkedItems));
   }
 
   Future<void> saveSettings({
@@ -96,6 +108,7 @@ class PersistenceService {
     required bool isCompactView,
     required bool showFrequentlyBought,
     required double speechRate,
+    String? quackCode,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble(_fontSizeKey, fontSize);
@@ -104,6 +117,9 @@ class PersistenceService {
     await prefs.setBool(_isCompactViewKey, isCompactView);
     await prefs.setBool(_showFrequentlyBoughtKey, showFrequentlyBought);
     await prefs.setDouble(_speechRateKey, speechRate);
+    if (quackCode != null) {
+      await prefs.setString(_quackCodeKey, quackCode);
+    }
   }
 
   String exportCookbook(List<Recipe> cookbook) {

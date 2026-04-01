@@ -33,6 +33,54 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.13.0"
+  bonsoir:
+    dependency: "direct main"
+    description:
+      name: bonsoir
+      sha256: "42f2c1eb55e833bcb541dfcb759851da0a703106646a0cf15a16c6de21f4a5a4"
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.0.2"
+  bonsoir_android:
+    dependency: transitive
+    description:
+      name: bonsoir_android
+      sha256: e19728f94a0d9813abf9e2edf644fede008e58ef539865a1be86ac5d8994154e
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.0.1"
+  bonsoir_darwin:
+    dependency: transitive
+    description:
+      name: bonsoir_darwin
+      sha256: e242a03a019fd474be657715826cfc13e43d02c88e46ec5611a20b9d4f72854d
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.0.1"
+  bonsoir_linux:
+    dependency: transitive
+    description:
+      name: bonsoir_linux
+      sha256: "9c326c572c241c6a38ab7a8a5dba27c82917ec12504f84308ce3b5706619e8d3"
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.0.2"
+  bonsoir_platform_interface:
+    dependency: transitive
+    description:
+      name: bonsoir_platform_interface
+      sha256: "3fa0c46b30eb2a2f48be6fa53591a5c0425bf00520be761b61763e58b51814ff"
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.0.1"
+  bonsoir_windows:
+    dependency: transitive
+    description:
+      name: bonsoir_windows
+      sha256: "34c54802baaa2f00e3c4ab7ea46888f2a829876753778e2f40e3f273c3382d34"
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.0.1"
   boolean_selector:
     dependency: transitive
     description:
@@ -248,6 +296,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  fluttertoast:
+    dependency: "direct main"
+    description:
+      name: fluttertoast
+      sha256: "144ddd74d49c865eba47abe31cbc746c7b311c82d6c32e571fd73c4264b740e2"
+      url: "https://pub.dev"
+    source: hosted
+    version: "9.0.0"
   glob:
     dependency: transitive
     description:
@@ -280,6 +336,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.6.0"
+  http_methods:
+    dependency: transitive
+    description:
+      name: http_methods
+      sha256: "6bccce8f1ec7b5d701e7921dca35e202d425b57e317ba1a37f2638590e29e566"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.1"
   http_parser:
     dependency: transitive
     description:
@@ -376,6 +440,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.0"
+  mobile_scanner:
+    dependency: "direct main"
+    description:
+      name: mobile_scanner
+      sha256: c92c26bf2231695b6d3477c8dcf435f51e28f87b1745966b1fe4c47a286171ce
+      url: "https://pub.dev"
+    source: hosted
+    version: "7.2.0"
+  multicast_dns:
+    dependency: "direct main"
+    description:
+      name: multicast_dns
+      sha256: de72ada5c3db6fdd6ad4ae99452fe05fb403c4bb37c67ceb255ddd37d2b5b1eb
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.3.3"
   native_toolchain_c:
     dependency: transitive
     description:
@@ -384,6 +464,102 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.17.6"
+  ndef_record:
+    dependency: "direct main"
+    description:
+      name: ndef_record
+      sha256: "210ffb12284961cab9e44b99462143316d9a20cd992581170706069ef77d74a6"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.4.2"
+  nested:
+    dependency: transitive
+    description:
+      name: nested
+      sha256: "03bac4c528c64c95c722ec99280375a6f2fc708eec17c7b3f07253b626cd2a20"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
+  network_info_plus:
+    dependency: "direct main"
+    description:
+      name: network_info_plus
+      sha256: "2866dadcbee2709e20d67737a1556f5675b8b0cdcf2c1659ba74bc21bffede4f"
+      url: "https://pub.dev"
+    source: hosted
+    version: "7.0.0"
+  network_info_plus_platform_interface:
+    dependency: transitive
+    description:
+      name: network_info_plus_platform_interface
+      sha256: "7e7496a8a9d8136859b8881affc613c4a21304afeb6c324bcefc4bd0aff6b94b"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.2"
+  nfc_manager:
+    dependency: "direct main"
+    description:
+      name: nfc_manager
+      sha256: "24c78b0e5702da53e7f8794d073624c0bee7cd99924f257cbd11f5d1c5866879"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.1.1"
+  nm:
+    dependency: transitive
+    description:
+      name: nm
+      sha256: "2c9aae4127bdc8993206464fcc063611e0e36e72018696cd9631023a31b24254"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.5.0"
+  nsd:
+    dependency: "direct main"
+    description:
+      name: nsd
+      sha256: "1611a5c9f61d56ff2973e1488ae04112103e5203b4a7a1fb594b48cfb366fc14"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.1.0"
+  nsd_android:
+    dependency: transitive
+    description:
+      name: nsd_android
+      sha256: "96d2d451c5db0319c37b1b2a38f2d55eb56ae54c0b0d3144c03c19c97436de4a"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.2.0"
+  nsd_ios:
+    dependency: transitive
+    description:
+      name: nsd_ios
+      sha256: "562fffe753543a65190344d3acd0ed80d96c571ac1a05bf10780c5584b5055ac"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.1"
+  nsd_macos:
+    dependency: transitive
+    description:
+      name: nsd_macos
+      sha256: "47cd355d84009befe02710c72bf1c1999b24d5f3fb3a3d914f8b77bcaca42542"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.1"
+  nsd_platform_interface:
+    dependency: transitive
+    description:
+      name: nsd_platform_interface
+      sha256: b1a5ace6f01ea2ce37f373e52c3b7af4fd7c11de2582ddcc89f4fc00615d9dff
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.2.0"
+  nsd_windows:
+    dependency: transitive
+    description:
+      name: nsd_windows
+      sha256: "68b4a256b0be258dbbad0ae789f2e8838d0935a353dac86b17c14c1a05df4ecd"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.0.1"
   objective_c:
     dependency: transitive
     description:
@@ -496,6 +672,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.5.0"
+  provider:
+    dependency: transitive
+    description:
+      name: provider
+      sha256: "4e82183fa20e5ca25703ead7e05de9e4cceed1fbd1eadc1ac3cb6f565a09f272"
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.1.5+1"
   pub_semver:
     dependency: transitive
     description:
@@ -504,6 +688,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.2.0"
+  qr:
+    dependency: transitive
+    description:
+      name: qr
+      sha256: "5a1d2586170e172b8a8c8470bbbffd5eb0cd38a66c0d77155ea138d3af3a4445"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.0.2"
+  qr_flutter:
+    dependency: "direct main"
+    description:
+      name: qr_flutter
+      sha256: "5095f0fc6e3f71d08adef8feccc8cea4f12eec18a2e31c2e8d82cb6019f4b097"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.1.0"
   share_plus:
     dependency: "direct main"
     description:
@@ -576,6 +776,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.4.1"
+  shelf:
+    dependency: "direct main"
+    description:
+      name: shelf
+      sha256: e7dd780a7ffb623c57850b33f43309312fc863fb6aa3d276a754bb299839ef12
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.4.2"
+  shelf_router:
+    dependency: "direct main"
+    description:
+      name: shelf_router
+      sha256: f5e5d492440a7fb165fe1e2e1a623f31f734d3370900070b2b1e0d0428d59864
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.4"
   sky_engine:
     dependency: transitive
     description: flutter

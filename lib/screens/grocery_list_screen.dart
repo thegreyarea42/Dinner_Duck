@@ -18,6 +18,8 @@ class GroceryListScreen extends StatefulWidget {
   final bool showFrequentlyBought;
   final List<String> frequentSuggestions;
   final List<String> categoryOrder;
+  final List<String> checkedItems;
+  final Function(String, bool) onCheckToggled;
 
   const GroceryListScreen({
     super.key,
@@ -33,6 +35,8 @@ class GroceryListScreen extends StatefulWidget {
     required this.frequentSuggestions,
     required this.onAddManual,
     required this.categoryOrder,
+    required this.checkedItems,
+    required this.onCheckToggled,
   });
 
   @override
@@ -43,7 +47,6 @@ class _GroceryListScreenState extends State<GroceryListScreen> with AutomaticKee
   @override
   bool get wantKeepAlive => true;
 
-  final Set<String> _checkedItems = {};
   final TextEditingController _manualController = TextEditingController();
   bool _isStoreLayout = true;
 
@@ -263,7 +266,6 @@ class _GroceryListScreenState extends State<GroceryListScreen> with AutomaticKee
                             ),
                             TextButton(
                                 onPressed: () {
-                                  setState(() => _checkedItems.clear());
                                   widget.onClearAll();
                                   Navigator.pop(ctx);
                                 },
@@ -320,7 +322,7 @@ class _GroceryListScreenState extends State<GroceryListScreen> with AutomaticKee
   }
 
   Widget _buildItem(String item) {
-    final bool isChecked = _checkedItems.contains(item);
+    final bool isChecked = widget.checkedItems.contains(item);
     return Dismissible(
       key: Key(item),
       direction: DismissDirection.endToStart,
@@ -331,9 +333,6 @@ class _GroceryListScreenState extends State<GroceryListScreen> with AutomaticKee
         child: const Icon(Icons.delete, color: Colors.white),
       ),
       onDismissed: (_) {
-        setState(() {
-          _checkedItems.remove(item);
-        });
         widget.onRemove(item);
       },
       child: Semantics(
@@ -349,15 +348,9 @@ class _GroceryListScreenState extends State<GroceryListScreen> with AutomaticKee
                 color: isChecked ? Colors.grey : null,
               ),
             ),
-            value: isChecked,
+            value: widget.checkedItems.contains(item),
             onChanged: (v) {
-              setState(() {
-                if (v == true) {
-                  _checkedItems.add(item);
-                } else {
-                  _checkedItems.remove(item);
-                }
-              });
+              widget.onCheckToggled(item, v ?? false);
             },
             controlAffinity: ListTileControlAffinity.leading,
           ),
